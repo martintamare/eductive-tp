@@ -63,5 +63,5 @@ backend default
     mode http
     balance roundrobin
     {% for backend in groups.backends -%}
-      server {{ hostvars[backend].ansible_facts.fqdn }} {{ hostvars[backend].ansible_facts.default_ipv4.address }}
+      server {{ hostvars[backend].ansible_facts.fqdn }} {{ hostvars[backend].ansible_facts.ens4.ipv4.address }}
     {% endfor -%}

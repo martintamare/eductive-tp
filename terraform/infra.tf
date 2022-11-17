@@ -23,6 +23,11 @@ resource "openstack_compute_instance_v2" "front" {
   network {
     name      = "Ext-Net"
   }
+  network {
+    name        = ovh_cloud_project_network_private.network.name
+    fixed_ip_v4 = "192.168.${var.vlan_id}.254"
+  }
+  depends_on    = [ovh_cloud_project_network_private_subnet.subnet_gra11]
 }
 
 # GRA11 backend instance(s)
@@ -37,6 +42,11 @@ resource "openstack_compute_instance_v2" "gra_backends" {
   network {
     name      = "Ext-Net"
   }
+  network {
+    name        = ovh_cloud_project_network_private.network.name
+    fixed_ip_v4 = "192.168.${var.vlan_id}.${count.index + 1}"
+  }
+  depends_on    = [ovh_cloud_project_network_private_subnet.subnet_gra11]
 }
 
 # SBG5 backend instance(s)
@@ -51,6 +61,11 @@ resource "openstack_compute_instance_v2" "sbg_backends" {
   network {
     name      = "Ext-Net"
   }
+  network {
+    name        = ovh_cloud_project_network_private.network.name
+    fixed_ip_v4 = "192.168.${var.vlan_id}.${count.index + 101}"
+  }
+  depends_on    = [ovh_cloud_project_network_private_subnet.subnet_sbg5]
 }
 
 # Inventaire
@@ -63,4 +78,37 @@ resource "local_file" "inventory" {
       front = openstack_compute_instance_v2.front.access_ip_v4,
     }
   )
+}
+
+# Vrack Réseau
+ resource "ovh_cloud_project_network_private" "network" {
+    service_name = var.service_name
+    name         = "private_network_${var.student_id}"
+    regions      = ["GRA11", "SBG5"]
+    provider     = ovh.ovh
+    vlan_id      = var.vlan_id
+}
+
+# Vrack Subnet GRA11
+resource "ovh_cloud_project_network_private_subnet" "subnet_gra11" {
+    service_name = var.service_name
+    network_id   = ovh_cloud_project_network_private.network.id
+    start        = var.vlan_dhcp_start
+    end          = var.vlan_dhcp_end
+    network      = var.vlan_dhcp_network
+    region       = "GRA11"
+    provider     = ovh.ovh
+    no_gateway   = true
+}
+
+# Vrack Subnet SBG5
+resource "ovh_cloud_project_network_private_subnet" "subnet_sbg5" {
+    service_name = var.service_name
+    network_id   = ovh_cloud_project_network_private.network.id
+    start        = var.vlan_dhcp_start
+    end          = var.vlan_dhcp_end
+    network      = var.vlan_dhcp_network
+    region       = "SBG5"
+    provider     = ovh.ovh
+    no_gateway   = true
 }

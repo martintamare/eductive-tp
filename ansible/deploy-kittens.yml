@@ -16,6 +16,17 @@
       template:
         src: templates/index.j2
         dest: /var/www/html/index.html
+    - name: Configure Nginx to listen on vrack
+      template:
+        src: templates/default.j2
+        dest: /etc/nginx/sites-available/default
+      notify:
+        - Restart nginx
+  handlers:
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
 - name: Install and haproxy on front
   hosts: front
   tasks:
@@ -32,9 +43,9 @@
         src: templates/haproxy.cfg.j2
         dest: /etc/haproxy/haproxy.cfg
       notify:
-        - Restart haproxy
+        - Reload haproxy
   handlers:
-    - name: Restart haproxy
+    - name: Reload haproxy
       ansible.builtin.service:
         name: haproxy
         state: reloaded
