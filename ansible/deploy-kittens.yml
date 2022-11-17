@@ -1,0 +1,40 @@
+---
+- name: Install and configure a kitten web page on backends
+  hosts: backends
+  vars:
+    helloworld: Coucou
+  tasks:
+    - name: Ensure package nginx is installed
+      apt:
+        name: nginx
+        state: latest
+    - name: Ensure service nginx is running
+      service:
+        name: nginx
+        state: started
+    - name: Configure Kitten Page
+      template:
+        src: templates/index.j2
+        dest: /var/www/html/index.html
+- name: Install and haproxy on front
+  hosts: front
+  tasks:
+    - name: Ensure package haproxy is installed
+      apt:
+        name: haproxy
+        state: latest
+    - name: Ensure service haproxy is running
+      service:
+        name: haproxy
+        state: started
+    - name: Configure haproxy
+      template:
+        src: templates/haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+      notify:
+        - Restart haproxy
+  handlers:
+    - name: Restart haproxy
+      ansible.builtin.service:
+        name: haproxy
+        state: reloaded
